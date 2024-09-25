@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform video interaktif</title>
+    <script src="tailwindcss.js"></script>
+    <link rel="stylesheet" href="plyr.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet" />
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+    body {
+        width: 100%;
+    }
+    body::-webkit-scrollbar {
+  display: none;
+}
+
+    #quizOverlay {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 500px; /* Increased width of the sidebar */
+    z-index: 1000;
+    overflow-y: auto;
+}
+    .quiz-content {
+        width: 100%;
+        max-height: 100vh;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+    @media (min-width: 640px) {
+        .quiz-content {
+            max-width: 100%; /* Full width for sidebar */
+        }
+    }
+
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <video id="player" class="w-full" playsinline controls>
+        <source src="https://1157-206-189-144-145.ngrok-free.app/video/main.mp4" type="video/mp4" />
+    </video>
+    <div id="quizOverlay" class="flex items-center justify-center hidden">
+        <div class="quiz-content bg-white p-6 rounded-lg">
+            <div id="score" class="font-bold text-lg mb-2">Score: 0</div> <!-- Score element in the overlay -->
+            <div id="questionText" class="font-bold mb-4"></div>
+            <div id="options" class="space-y-2"></div>
+            <div id="feedback" class="mt-4 font-bold"></div>
+            <button id="continueBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">Lanjutkan</button>
+            <button id="continueBtn1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">Lewati Pertanyaan</button>
+        </div>
+    </div>
+    <a href="index1.html" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Focus Mode</a>
+    <script src="questions.js"></script>
+    <script src="https://cdn.plyr.io/3.6.12/plyr.polyfilled.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
+    <script>
+    const player = new Plyr('#player', {
+        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+    });
+    const quizOverlay = document.getElementById('quizOverlay');
+    const questionText = document.getElementById('questionText');
+    const options = document.getElementById('options');
+    const feedback = document.getElementById('feedback');
+    const continueBtn = document.getElementById('continueBtn');
+    const continueBtnn = document.getElementById('continueBtn1');
+    const scoreElement = document.getElementById('score');
+    var wait1 = new Audio('wait1.mp3');
+    wait1.loop = true;  // Enable looping for the audio
+
+    let score = 0;
+    let currentQuestionIndex = 0;
+
+    player.on('timeupdate', () => {
+        const currentTime = Math.floor(player.currentTime);
+        const question = questions[currentQuestionIndex];
+
+        if (question && currentTime === question.time) {
+            player.pause();
+            showQuestion(question);
+        }
+    });
+
+    function showQuestion(question) {
+        quizOverlay.classList.remove('hidden');
+        questionText.innerHTML = question.question;
+        options.innerHTML = '';
+        wait1.play();  // Play the audio when the question is shown
+
+        question.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.className = 'w-full text-left p-2 rounded bg-gray-200 hover:bg-gray-300';
+            button.onclick = () => checkAnswer(index, question.correctAnswer);
+            options.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIndex, correctIndex) {
+        const isCorrect = selectedIndex === correctIndex;
+        feedback.textContent = isCorrect ? 'Benar!' : 'Jawaban Salah, coba lagi. \n atau';
+        feedback.className = isCorrect ? 'text-green-500' : 'text-red-500';
+
+        if (isCorrect) {
+            score++; // Increment the score
+            scoreElement.textContent = `Score: ${score}`; // Update the score display
+            continueBtn.classList.remove('hidden');
+        } else {
+            continueBtnn.classList.remove('hidden');
+        }
+        wait1.pause(); 
+        wait1.currentTime = 0; 
+    }
+
+    function hideOverlay() {
+        quizOverlay.classList.add('hidden');
+        feedback.textContent = '';
+        continueBtn.classList.add('hidden');
+
+    }
+
+    continueBtn.addEventListener('click', () => {
+        hideOverlay();
+        currentQuestionIndex++;
+        player.play();
+    });
+
+    continueBtnn.addEventListener('click', () => {
+        hideOverlay();
+        currentQuestionIndex++;
+        player.play();
+    });
+
+    </script>
+</body>
+</html>

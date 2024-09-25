@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform video interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.12/plyr.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet" />
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            width: 100%;
+        }
+        #quizOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .quiz-content {
+            max-width: 100%;
+            width: 100%;
+            max-height: 100vh;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        @media (min-width: 640px) {
+            .quiz-content {
+                max-width: 28rem;
+            }
+        }
+        #chatMessages {
+            height: 200px;
+            overflow-y: auto;
+        }
+        .carousel-df {
+    height: auto;
+    flex-direction: column;
+    justify-content: center;
+    height: 20rem;
+}
+
+.carousel-df img {
+    width: 100%;           /* Ensures the image covers the entire width */
+    height: 80%;          /* Ensures the image covers the entire height */
+    object-fit: cover;      /* Makes the image cover the card without stretching */
+}
+
+.carousel-df .carousel-item {
+    width: 100%;
+    height: 200px;          /* Set a height that fits your design */
+}
+
+@media (min-width: 640px) {
+    .carousel-df .carousel-item {
+        height: 18rem;
+    }
+}
+
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+                        <video id="player" class="w-full" playsinline controls>
+                            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                        </video>
+                        <div id="quizOverlay" class="bg-black bg-opacity-75 flex items-center justify-center hidden">
+                            <div class="quiz-content bg-white p-6 rounded-lg">
+                                <div id="questionText" class="text-xl font-bold mb-4"></div>
+                                <div id="options" class="space-y-2"></div>
+                                <div id="feedback" class="mt-4 font-bold"></div>
+                                <button id="continueBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">Lanjutkan</button>
+                                <button id="continueBtn1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">Lewati Pertanyaan</button>
+                            </div>
+                        </div>
+
+
+    <script src="https://cdn.plyr.io/3.6.12/plyr.polyfilled.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
+    <script>
+    const player = new Plyr('#player', {
+        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+    });
+    const quizOverlay = document.getElementById('quizOverlay');
+    const questionText = document.getElementById('questionText');
+    const options = document.getElementById('options');
+    const feedback = document.getElementById('feedback');
+    const continueBtn = document.getElementById('continueBtn');
+    const continueBtnn = document.getElementById('continueBtn1');
+    const scoreElement = document.getElementById('score');
+    const playerContainer = document.getElementById('playerContainer');
+
+    let score = 0;
+    let currentQuestionIndex = 0;
+
+    const questions = [
+        {
+            time: 1,
+            question: 'tes pertanyaan aja, <img src="https://cms.imgworlds.com/assets/e3873302-212a-4c3a-aab3-c3bee866903c.jpg?key=home-gallery" alt="Cartoon characters" class="w-full mb-4"><p>Which cartoon character is NOT in this image?</p>',
+            options: ["Gumball", "Darwin", "Finn", "Jake"],
+            correctAnswer: 2
+        },
+        {
+            time: 15,
+            question: "Pertanyaan 2?",
+            options: ["Opsi 1", "Opsi 2", "Opsi 3", "Opsi 4"],
+            correctAnswer: 1
+        },
+        {
+            time: 25,
+            question: "What is the main character doing?",
+            options: ["Sleeping", "Eating", "Running", "Flying"],
+            correctAnswer: 2
+        }
+    ];
+
+    player.on('timeupdate', () => {
+        const currentTime = Math.floor(player.currentTime);
+        const question = questions[currentQuestionIndex];
+
+        if (question && currentTime === question.time) {
+            player.pause();
+            showQuestion(question);
+        }
+    });
+
+    function showQuestion(question) {
+        quizOverlay.classList.remove('hidden');
+        questionText.innerHTML = question.question;
+        options.innerHTML = '';
+
+        question.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.className = 'w-full text-left p-2 rounded bg-gray-200 hover:bg-gray-300';
+            button.onclick = () => checkAnswer(index, question.correctAnswer);
+            options.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedIndex, correctIndex) {
+        const isCorrect = selectedIndex === correctIndex;
+        feedback.textContent = isCorrect ? 'Benar!' : 'Jawaban Salah, coba lagi. \n atau';
+        feedback.className = isCorrect ? 'text-green-500' : 'text-red-500';
+
+        if (isCorrect) {
+            score++;
+            scoreElement.textContent = `Score: ${score}`;
+            continueBtn.classList.remove('hidden');
+            options.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            continueBtnn.classList.add('hidden');
+        } else {
+            continueBtnn.classList.remove('hidden');
+        }
+        scoreElement.classList.remove('hidden');
+    }
+
+    continueBtn.addEventListener('click', () => {
+        quizOverlay.classList.add('hidden');
+        feedback.textContent = '';
+        continueBtn.classList.add('hidden');
+        currentQuestionIndex++;
+        player.play();
+    });
+
+    continueBtnn.addEventListener('click', () => {
+        quizOverlay.classList.add('hidden');
+        feedback.textContent = '';
+        continueBtn.classList.add('hidden');
+        currentQuestionIndex++;
+        player.play();
+    });
+
+
+    </script>
+</body>
+</html>

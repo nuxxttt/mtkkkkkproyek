@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullscreen Video with Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.12/plyr.css" />
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #videoContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+        #quizOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .quiz-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            width: 28rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="videoContainer">
+        <video id="player" playsinline controls>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+        </video>
+    </div>
+
+    <div id="quizOverlay" class="hidden">
+        <div class="quiz-content">
+            <div id="questionText" class="text-xl font-bold mb-4"></div>
+            <div id="options" class="space-y-2"></div>
+            <div id="feedback" class="mt-4 font-bold"></div>
+            <button id="continueBtn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">Lanjutkan</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.6.12/plyr.polyfilled.js"></script>
+    <script>
+const player = new Plyr('#player', {
+    controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+});
+const quizOverlay = document.getElementById('quizOverlay');
+const questionText = document.getElementById('questionText');
+const options = document.getElementById('options');
+const feedback = document.getElementById('feedback');
+const continueBtn = document.getElementById('continueBtn');
+
+let currentQuestionIndex = 0;
+
+const questions = [
+    {
+        time: 0, // Changed to 0 to show immediately
+        question: "What is the main character of this video?",
+        options: ["A rabbit", "A bear", "A bunny", "A squirrel"],
+        correctAnswer: 2
+    },
+    {
+        time: 2, // Changed to 0 to show immediately
+        question: "What is the main character of this video?",
+        options: ["A rabbit", "A bear", "A bunny", "A squirrel"],
+        correctAnswer: 2
+    }
+
+];
+
+player.on('ready', () => {
+    console.log('Player is ready');
+    showQuestion(questions[currentQuestionIndex]);
+});
+
+player.on('timeupdate', () => {
+    const currentTime = Math.floor(player.currentTime);
+    console.log('Current time:', currentTime);
+    const question = questions[currentQuestionIndex];
+
+    if (question && currentTime === question.time) {
+        console.log('Showing question at time:', currentTime);
+        player.pause();
+        showQuestion(question);
+    }
+});
+
+function showQuestion(question) {
+    console.log('Showing question:', question);
+    quizOverlay.classList.remove('hidden');
+    questionText.textContent = question.question;
+    options.innerHTML = '';
+
+    question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.textContent = option;
+        button.className = 'w-full text-left p-2 rounded bg-gray-200 hover:bg-gray-300';
+        button.onclick = () => checkAnswer(index, question.correctAnswer);
+        options.appendChild(button);
+        quizOverlay.classList.add('hidden');
+
+    });
+}
+
+function checkAnswer(selectedIndex, correctIndex) {
+    const isCorrect = selectedIndex === correctIndex;
+    feedback.textContent = isCorrect ? 'Correct!' : 'Incorrect. Try again.';
+    feedback.className = isCorrect ? 'text-green-500' : 'text-red-500';
+
+    if (isCorrect) {
+        continueBtn.classList.remove('hidden');
+        options.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    }
+}
+
+continueBtn.addEventListener('click', () => {
+    quizOverlay.classList.add('hidden');
+    feedback.textContent = '';
+    continueBtn.classList.add('hidden');
+    currentQuestionIndex++;
+    player.play();
+});
+
+// Debugging: Log when the script has fully loaded
+console.log('Quiz script loaded');
+
+    </script>
+</body>
+</html>
